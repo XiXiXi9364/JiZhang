@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>极简记账·多端同步</title>
+  <title>极简记账·多账本</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -22,26 +22,49 @@
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg); color: var(--text);
-      display: flex; justify-content: center; align-items: flex-start;
-      min-height: 100vh; padding-bottom: calc(70px + var(--safe-bottom));
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-bottom: calc(70px + var(--safe-bottom));
       user-select: none;
     }
     .app-container {
-      width: 100%; max-width: 420px; padding: 16px;
-      display: flex; flex-direction: column; gap: 16px;
+      width: 100%;
+      max-width: 420px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.3s;
     }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
     .card {
-      background: var(--card); border-radius: var(--radius); padding: 20px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
       box-shadow: var(--shadow);
     }
+
     .ledger-switch {
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--card); border-radius: 16px; padding: 12px 16px;
-      box-shadow: var(--shadow); cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 12px 16px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: 0.2s;
     }
+    .ledger-switch:active { background: #f9fafb; }
     .ledger-name { font-weight: 600; font-size: 17px; }
+    .ledger-arrow { font-size: 12px; color: #94a3b8; margin-left: 8px; }
     .ledger-budget-tag { font-size: 13px; color: var(--primary); background: rgba(79,139,255,0.1); padding: 2px 10px; border-radius: 12px; }
+
     .budget-card { display: flex; flex-direction: column; gap: 12px; }
     .budget-header { display: flex; justify-content: space-between; align-items: baseline; }
     .budget-header .label { font-size: 14px; color: var(--text-secondary); }
@@ -51,49 +74,66 @@
     .progress-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); }
     .warning-text { color: #f59e0b; font-weight: 500; }
     .over-text { color: #ef4444; font-weight: 500; }
+
     .segmented {
       display: flex; background: #f1f5f9; border-radius: 12px; padding: 4px; margin-bottom: 16px;
     }
     .segmented button {
       flex:1; padding: 10px; border: none; background: transparent; border-radius: 10px;
-      font-size: 15px; font-weight: 600; color: #64748b; cursor: pointer;
+      font-size: 15px; font-weight: 600; color: #64748b; transition: all 0.2s; cursor: pointer;
     }
-    .segmented button.active { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+    .segmented button.active { background: white; color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
     .segmented button.expense.active { color: var(--expense); }
     .segmented button.income.active { color: var(--income); }
+
     .category-scroll {
       display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px;
-      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
     }
     .category-scroll::-webkit-scrollbar { display: none; }
     .cat-chip {
       display: flex; flex-direction: column; align-items: center; gap: 4px;
-      padding: 10px 14px; background: #f8fafc; border-radius: 16px;
-      font-size: 12px; color: #64748b; cursor: pointer; min-width: 64px; flex-shrink: 0;
+      padding: 10px 14px; background: #f8fafc; border-radius: 16px; border: 1px solid transparent;
+      font-size: 12px; color: #64748b; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+      min-width: 64px; flex-shrink: 0;
     }
     .cat-chip .emoji { font-size: 24px; }
-    .cat-chip.active { background: white; border: 1px solid var(--primary); color: var(--primary); }
+    .cat-chip.active {
+      background: white; border-color: var(--primary); color: var(--primary);
+      box-shadow: 0 2px 8px rgba(79,139,255,0.2);
+    }
+
     .new-cat-btn {
       display: block; width: 100%; margin-top: 12px; padding: 12px;
       background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 14px;
-      font-size: 15px; color: #64748b; cursor: pointer; text-align: center;
+      font-size: 15px; color: #64748b; cursor: pointer; transition: 0.2s;
+      text-align: center; font-weight: 500;
     }
+    .new-cat-btn:active { background: #eef2ff; border-color: var(--primary); color: var(--primary); }
+
     .amount-input {
-      width: 100%; font-size: 36px; font-weight: 700; border: none;
-      border-bottom: 2px solid #e2e8f0; padding: 12px 0; outline: none;
-      text-align: center; margin: 16px 0 12px;
+      width: 100%; font-size: 36px; font-weight: 700; border: none; border-bottom: 2px solid #e2e8f0;
+      padding: 12px 0; outline: none; background: transparent; text-align: center;
+      margin: 16px 0 12px; transition: border 0.2s;
     }
-    .date-input, .note-input {
-      width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px;
-      font-size: 16px; margin-bottom: 8px; background: white;
+    .amount-input:focus { border-bottom-color: var(--primary); }
+    .date-input {
+      width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px;
+      margin-bottom: 8px; background: white;
+    }
+    .note-input {
+      width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px;
+      margin-bottom: 16px; background: white;
     }
     .btn-save {
-      width: 100%; padding: 16px; background: var(--primary); color: white;
-      border: none; border-radius: 16px; font-size: 18px; font-weight: 700; cursor: pointer;
+      width: 100%; padding: 16px; background: var(--primary); color: white; border: none;
+      border-radius: 16px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s;
     }
+    .btn-save:active { transform: scale(0.97); }
+
     .bill-item {
-      display: flex; align-items: center; padding: 12px 0;
-      border-bottom: 1px solid #f1f5f9;
+      display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+      animation: fadeIn 0.2s;
     }
     .bill-icon {
       width: 42px; height: 42px; border-radius: 12px; background: #f1f5f9;
@@ -101,171 +141,299 @@
     }
     .bill-info { flex:1; }
     .bill-category { font-weight: 600; font-size: 16px; }
-    .bill-meta { font-size: 12px; color: #94a3b8; }
+    .bill-meta { font-size: 12px; color: #94a3b8; margin-top: 2px; display: flex; gap: 8px; }
     .bill-amount { font-size: 18px; font-weight: 700; }
     .bill-amount.expense { color: var(--expense); }
     .bill-amount.income { color: var(--income); }
     .bill-actions { display: flex; gap: 6px; margin-left: 8px; }
     .btn-icon {
-      width: 32px; height: 32px; border-radius: 10px; border: none;
-      background: #f1f5f9; font-size: 14px; cursor: pointer;
+      width: 32px; height: 32px; border-radius: 10px; border: none; background: #f1f5f9;
+      font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: 0.2s;
     }
+    .btn-icon:active { background: #e2e8f0; }
+    .refund-text { text-decoration: line-through; color: #94a3b8; }
+
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid #f1f5f9;
       display: flex; padding: 8px 16px calc(8px + var(--safe-bottom));
       justify-content: space-around; z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
     }
     .nav-item {
-      display: flex; flex-direction: column; align-items: center;
-      font-size: 11px; color: #94a3b8; gap: 4px; padding: 6px 12px;
-      border-radius: 20px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #94a3b8;
+      gap: 4px; padding: 6px 12px; border-radius: 20px; transition: 0.2s; cursor: pointer;
     }
     .nav-item.active { color: var(--primary); background: rgba(79,139,255,0.08); }
     .nav-item .icon { font-size: 22px; }
-    .time-filters { display: flex; gap: 8px; margin-bottom: 16px; }
+
+    .time-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .time-filter {
-      padding: 8px 16px; border-radius: 20px; background: #f1f5f9;
-      border: none; font-size: 13px; color: #64748b; cursor: pointer;
+      padding: 8px 16px; border-radius: 20px; background: #f1f5f9; border: none;
+      font-size: 13px; font-weight: 500; color: #64748b; cursor: pointer; transition: 0.2s;
     }
     .time-filter.active { background: var(--primary); color: white; }
     .stats-tabs { display: flex; gap: 12px; margin-bottom: 16px; }
     .stats-tab {
-      flex:1; padding: 10px; border-radius: 12px; background: #f1f5f9;
-      text-align: center; font-weight: 600; font-size: 14px; color: #64748b; cursor: pointer;
+      flex:1; padding: 10px; border-radius: 12px; background: #f1f5f9; text-align: center;
+      font-weight: 600; font-size: 14px; color: #64748b; cursor: pointer; transition: 0.2s;
     }
     .stats-tab.active { background: var(--primary); color: white; }
     canvas { width: 100%; border-radius: 16px; background: #f9fafb; }
+
     .hidden-page { display: none; }
     .page.active { display: block; }
+
+    /* 自动同步状态条 */
+    .sync-status {
+      background: #e6f7e6;
+      color: #2e7d32;
+      text-align: center;
+      font-size: 12px;
+      padding: 6px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
-<div class="app-container">
-  <div class="ledger-switch" onclick="openLedgerSwitcher()">
-    <div><span class="ledger-name" id="currentLedgerName">日常生活</span></div>
-    <span class="ledger-budget-tag" id="currentLedgerBudget">预算 ¥8000</span>
+
+<div id="appMain">
+  <div class="app-container">
+    <div class="ledger-switch" onclick="openLedgerSwitcher()">
+      <div>
+        <span class="ledger-name" id="currentLedgerName">日常生活</span>
+        <span class="ledger-arrow">▼</span>
+      </div>
+      <span class="ledger-budget-tag" id="currentLedgerBudget">预算 ¥8000</span>
+    </div>
+
+    <div id="page-record" class="page active">
+      <div class="card budget-card">
+        <div class="budget-header">
+          <span class="label">本月预算</span>
+          <span class="value" id="budgetUsed">¥0</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-fill" id="budgetBar" style="width:0%; background: var(--primary);"></div>
+        </div>
+        <div class="progress-info">
+          <span id="budgetRemain">剩余 ¥0</span>
+          <span id="budgetPercent">0%</span>
+        </div>
+        <div id="budgetAlert" style="font-size:13px; margin-top:4px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="segmented" id="typeSegment">
+          <button class="expense active" data-type="expense">📉 支出</button>
+          <button class="income" data-type="income">📈 收入</button>
+        </div>
+        <div class="category-scroll" id="catContainer"></div>
+        <button class="new-cat-btn" onclick="addNewCategory()">➕ 新建分类</button>
+        <input type="number" id="amountInput" class="amount-input" placeholder="0.00" step="0.01" inputmode="decimal">
+        <input type="date" id="dateInput" class="date-input">
+        <input type="text" id="noteInput" class="note-input" placeholder="备注（可选）">
+        <button class="btn-save" onclick="submitRecord()">💾 保存记录</button>
+      </div>
+
+      <div class="card" style="padding-bottom:8px;">
+        <h3 style="margin-bottom:12px;">📋 最近账单</h3>
+        <div id="billList"></div>
+      </div>
+    </div>
+
+    <div id="page-stats" class="page hidden-page">
+      <div class="card">
+        <div class="time-filters">
+          <button class="time-filter active" data-range="thisMonth">本月</button>
+          <button class="time-filter" data-range="thisWeek">本周</button>
+          <button class="time-filter" data-range="custom">自定义</button>
+        </div>
+        <div class="stats-tabs" id="statsTabs">
+          <div class="stats-tab active" data-view="pie">📊 分类饼图</div>
+          <div class="stats-tab" data-view="trend">📈 支出趋势</div>
+        </div>
+        <div id="customRange" style="display:none; margin-bottom:12px; display:flex; gap:8px;">
+          <input type="date" id="startDate" style="flex:1;">
+          <input type="date" id="endDate" style="flex:1;">
+          <button onclick="applyCustomRange()" style="padding:8px 12px;">确定</button>
+        </div>
+        <canvas id="mainCanvas" width="320" height="220"></canvas>
+        <div id="legendArea" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <div id="page-mine" class="page hidden-page">
+      <div id="syncStatus" class="sync-status">☁️ 云端同步已启用</div>
+      <div class="card" style="display:flex; flex-direction:column; gap:12px;">
+        <button class="btn-primary" style="width:100%;" onclick="openLedgerManager()">📒 管理账本</button>
+        <button class="btn-primary" style="width:100%; background:#0ea5e9;" onclick="exportData()">⬇️ 导出备份</button>
+        <button class="btn-primary" style="width:100%; background:#f59e0b;" onclick="importDataPrompt()">⬆️ 导入备份</button>
+      </div>
+    </div>
   </div>
 
-  <div id="page-record" class="page active">
-    <div class="card budget-card">
-      <div class="budget-header">
-        <span class="label">本月预算</span>
-        <span class="value" id="budgetUsed">¥0</span>
-      </div>
-      <div class="progress-wrap">
-        <div class="progress-fill" id="budgetBar" style="width:0%;"></div>
-      </div>
-      <div class="progress-info">
-        <span id="budgetRemain">剩余 ¥0</span>
-        <span id="budgetPercent">0%</span>
-      </div>
-      <div id="budgetAlert" style="font-size:13px;"></div>
-    </div>
-
-    <div class="card">
-      <div class="segmented" id="typeSegment">
-        <button class="expense active" data-type="expense">📉 支出</button>
-        <button class="income" data-type="income">📈 收入</button>
-      </div>
-      <div class="category-scroll" id="catContainer"></div>
-      <button class="new-cat-btn" onclick="addNewCategory()">➕ 新建分类</button>
-      <input type="number" id="amountInput" class="amount-input" placeholder="0.00" step="0.01" inputmode="decimal">
-      <input type="date" id="dateInput" class="date-input">
-      <input type="text" id="noteInput" class="note-input" placeholder="备注（可选）">
-      <button class="btn-save" onclick="submitRecord()">💾 保存记录</button>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-bottom:12px;">📋 最近账单</h3>
-      <div id="billList"></div>
-    </div>
+  <div class="bottom-nav" id="bottomNav">
+    <div class="nav-item active" data-page="record"><span class="icon">✏️</span><span>记账</span></div>
+    <div class="nav-item" data-page="stats"><span class="icon">📊</span><span>统计</span></div>
+    <div class="nav-item" data-page="mine"><span class="icon">⚙️</span><span>我的</span></div>
   </div>
-
-  <div id="page-stats" class="page hidden-page">
-    <div class="card">
-      <div class="time-filters">
-        <button class="time-filter active" data-range="thisMonth">本月</button>
-        <button class="time-filter" data-range="thisWeek">本周</button>
-        <button class="time-filter" data-range="custom">自定义</button>
-      </div>
-      <div class="stats-tabs" id="statsTabs">
-        <div class="stats-tab active" data-view="pie">📊 分类饼图</div>
-        <div class="stats-tab" data-view="trend">📈 支出趋势</div>
-      </div>
-      <div id="customRange" style="display:none; gap:8px; margin-bottom:12px;">
-        <input type="date" id="startDate" style="flex:1;">
-        <input type="date" id="endDate" style="flex:1;">
-        <button onclick="applyCustomRange()" style="padding:8px 12px;">确定</button>
-      </div>
-      <canvas id="mainCanvas" width="320" height="220"></canvas>
-      <div id="legendArea" style="margin-top:12px;"></div>
-    </div>
-  </div>
-
-  <div id="page-mine" class="page hidden-page">
-    <div class="card" style="display:flex; flex-direction:column; gap:12px;">
-      <button class="btn-primary" style="width:100%;" onclick="openLedgerManager()">📒 管理账本</button>
-      <button class="btn-primary" style="width:100%; background:#0ea5e9;" onclick="exportData()">⬇️ 导出备份</button>
-      <button class="btn-primary" style="width:100%; background:#f59e0b;" onclick="importDataPrompt()">⬆️ 导入备份</button>
-    </div>
-  </div>
-</div>
-
-<div class="bottom-nav" id="bottomNav">
-  <div class="nav-item active" data-page="record"><span class="icon">✏️</span><span>记账</span></div>
-  <div class="nav-item" data-page="stats"><span class="icon">📊</span><span>统计</span></div>
-  <div class="nav-item" data-page="mine"><span class="icon">⚙️</span><span>我的</span></div>
 </div>
 
 <script>
-  // ⚠️ 替换成你的 Supabase 信息
-  const SUPABASE_URL = 'https://wrwsxucnjzwmgxvnzjls.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_f2Q-tWOmg-zzFsSikuTWIQ_tmFuXbMi';
+  // ==================== Supabase 配置 ====================
+  // 请替换为您的 Supabase 项目 URL 和 anon key
+  const SUPABASE_URL = 'https://jnbzjotywsuhitdldwwl.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_Ku2k4e_GDuod2QLVqP40yg__bSOvAIB';
+  const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // 固定账户（自动登录，用户无感）
+  const FIXED_EMAIL = 'sync@ledger.app';
+  const FIXED_PASSWORD = 'Ledger2026!';
+
+  // ==================== 原有数据逻辑 ====================
+  const STORAGE_KEY = 'ledger_v4';
   
   const DEFAULT_EXPENSE_CATS = ['餐饮','交通','购物','娱乐','居家'];
   const DEFAULT_INCOME_CATS = ['微信','农业银行','农村信用社'];
+  
   const CAT_EMOJI_MAP = {
     '餐饮':'🍔', '交通':'🚌', '购物':'🛍️', '娱乐':'🎉', '居家':'🏠',
     '微信':'💬', '农业银行':'🏦', '农村信用社':'🏦'
   };
+  function getCatEmoji(name) { return CAT_EMOJI_MAP[name] || '💲'; }
 
-  let appData = { ledgers: [], activeLedgerId: null, records: [] };
+  let appData = {
+    ledgers: [
+      { id: 'daily_default', name: '日常生活', type: 'daily', budget: 8000, customExpenseCats: [], customIncomeCats: [] }
+    ],
+    activeLedgerId: 'daily_default',
+    records: []
+  };
+
   let currentType = 'expense';
   let currentCategory = '餐饮';
   let currentStatsView = 'pie';
   let currentPage = 'record';
   let currentTimeRange = 'thisMonth';
   let customStart = null, customEnd = null;
+  let currentUser = null;
+  let isSyncing = false;
 
-  // 从云端加载所有数据
-  async function loadFromCloud() {
-    const { data: ledgers } = await supabase.from('ledgers').select('*');
-    appData.ledgers = ledgers || [];
-    if (appData.ledgers.length === 0) {
-      const { data: newLedger } = await supabase.from('ledgers').insert({
-        name: '日常生活', type: 'daily', budget: 8000, custom_expense_cats: [], custom_income_cats: []
-      }).select().single();
-      appData.ledgers = [newLedger];
+  function loadLocal() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try { appData = JSON.parse(saved); } catch(e) { initDefaultData(); }
+    } else {
+      initDefaultData();
     }
-    appData.activeLedgerId = appData.ledgers[0].id;
-    
-    const { data: records } = await supabase.from('records').select('*').order('date', { ascending: false });
-    appData.records = records || [];
+    if (!appData.ledgers || !appData.ledgers.length) initDefaultData();
+    if (!appData.activeLedgerId) appData.activeLedgerId = appData.ledgers[0].id;
+  }
+
+  function initDefaultData() {
+    appData = {
+      ledgers: [{ id: 'daily_default', name: '日常生活', type: 'daily', budget: 8000, customExpenseCats: [], customIncomeCats: [] }],
+      activeLedgerId: 'daily_default',
+      records: []
+    };
+  }
+
+  function saveLocal() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+  }
+
+  async function saveToCloud() {
+    if (!currentUser || isSyncing) return;
+    try {
+      isSyncing = true;
+      const { error } = await supabase
+        .from('user_data')
+        .upsert({ user_id: currentUser.id, data: appData, updated_at: new Date() }, { onConflict: 'user_id' });
+      if (error) console.error('云端保存失败', error);
+    } catch(e) { console.error(e); } finally { isSyncing = false; }
+  }
+
+  async function loadFromCloud() {
+    if (!currentUser) return false;
+    try {
+      const { data, error } = await supabase
+        .from('user_data')
+        .select('data')
+        .eq('user_id', currentUser.id)
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      if (data) {
+        appData = data.data;
+        saveLocal();
+        return true;
+      } else {
+        await saveToCloud();
+        return true;
+      }
+    } catch(e) { console.error('加载云端数据失败', e); return false; }
+  }
+
+  async function saveData() {
+    saveLocal();
+    if (currentUser) await saveToCloud();
     refreshUI();
   }
 
-  function getActiveLedger() {
-    return appData.ledgers.find(l => l.id === appData.activeLedgerId) || appData.ledgers[0];
+  async function loadData() {
+    loadLocal();
+    if (currentUser) {
+      await loadFromCloud();
+    }
+    refreshUI();
   }
-  function getCategoriesForType(type) {
-    const ledger = getActiveLedger();
-    const customs = type === 'expense' ? (ledger.customExpenseCats || []) : (ledger.customIncomeCats || []);
-    return [...(type === 'expense' ? DEFAULT_EXPENSE_CATS : DEFAULT_INCOME_CATS), ...customs];
+
+  // 自动登录/注册固定账号
+  async function autoAuth() {
+    try {
+      // 尝试登录
+      let { data, error } = await supabase.auth.signInWithPassword({
+        email: FIXED_EMAIL,
+        password: FIXED_PASSWORD
+      });
+      if (error) {
+        // 账号不存在，则注册
+        if (error.message.includes('Invalid login credentials')) {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: FIXED_EMAIL,
+            password: FIXED_PASSWORD
+          });
+          if (signUpError) throw signUpError;
+          // 注册后自动登录
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email: FIXED_EMAIL,
+            password: FIXED_PASSWORD
+          });
+          if (loginError) throw loginError;
+          currentUser = loginData.user;
+        } else {
+          throw error;
+        }
+      } else {
+        currentUser = data.user;
+      }
+      await loadData();
+    } catch(e) {
+      console.error('自动认证失败', e);
+      // 降级：仍可使用本地存储，但无云端同步
+      document.getElementById('syncStatus').innerText = '⚠️ 云端同步不可用，数据仅保存在本地';
+      document.getElementById('syncStatus').style.background = '#fff3e0';
+      document.getElementById('syncStatus').style.color = '#e65100';
+      loadLocal();
+      refreshUI();
+    }
   }
-  function getCatEmoji(name) { return CAT_EMOJI_MAP[name] || '💲'; }
+
+  // ==================== 原有函数 ====================
   function formatDateStr(date) { const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function getMonthKey(dateStr) { return dateStr.substring(0,7); }
   function getWeekRange() {
@@ -277,10 +445,9 @@
   }
   function getMonthRange() {
     const now = new Date();
-    return {
-      start: formatDateStr(new Date(now.getFullYear(), now.getMonth(), 1)),
-      end: formatDateStr(new Date(now.getFullYear(), now.getMonth() + 1, 0))
-    };
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { start: formatDateStr(firstDay), end: formatDateStr(lastDay) };
   }
 
   function refreshUI() {
@@ -288,26 +455,25 @@
     updateBudgetDisplay();
     renderCategoryChips();
     renderBillList();
-    document.getElementById('dateInput').value = formatDateStr(new Date());
+    const dateInput = document.getElementById('dateInput');
+    if (dateInput && !dateInput.value) dateInput.value = formatDateStr(new Date());
   }
 
   function updateLedgerDisplay() {
     const ledger = getActiveLedger();
-    if (!ledger) return;
     document.getElementById('currentLedgerName').innerText = ledger.name;
     document.getElementById('currentLedgerBudget').innerText = `预算 ¥${ledger.budget}`;
   }
 
   function updateBudgetDisplay() {
     const ledger = getActiveLedger();
-    if (!ledger) return;
     const monthRange = getMonthRange();
     const spent = appData.records
       .filter(r => r.ledgerId === ledger.id && r.type === 'expense' && !r.refund && r.date >= monthRange.start && r.date <= monthRange.end)
       .reduce((s, r) => s + r.amount, 0);
     const budget = ledger.budget || 1;
     const percent = Math.min(100, Math.round((spent / budget) * 100));
-    document.getElementById('budgetUsed').innerText = `¥${spent.toFixed(2)} / ¥${budget}`;
+    document.getElementById('budgetUsed').innerHTML = `¥${spent.toFixed(2)} / ¥${budget}`;
     const bar = document.getElementById('budgetBar');
     bar.style.width = percent + '%';
     bar.style.background = percent >= 100 ? '#ef4444' : (percent >= 80 ? '#f59e0b' : 'var(--primary)');
@@ -318,10 +484,21 @@
     alertEl.className = percent >= 100 ? 'over-text' : (percent >= 80 ? 'warning-text' : '');
   }
 
+  function getActiveLedger() {
+    return appData.ledgers.find(l => l.id === appData.activeLedgerId) || appData.ledgers[0];
+  }
+
+  function getCategoriesForType(type) {
+    const ledger = getActiveLedger();
+    if (type === 'expense') return [...DEFAULT_EXPENSE_CATS, ...ledger.customExpenseCats];
+    return [...DEFAULT_INCOME_CATS, ...ledger.customIncomeCats];
+  }
+
   function renderCategoryChips() {
     const container = document.getElementById('catContainer');
+    const cats = getCategoriesForType(currentType);
     container.innerHTML = '';
-    getCategoriesForType(currentType).forEach(cat => {
+    cats.forEach(cat => {
       const chip = document.createElement('div');
       chip.className = `cat-chip ${currentCategory === cat ? 'active' : ''}`;
       chip.innerHTML = `<span class="emoji">${getCatEmoji(cat)}</span><span>${cat}</span>`;
@@ -330,31 +507,34 @@
     });
   }
 
-  // 事件处理
-  window.addNewCategory = async function() {
-    const name = prompt(`输入新${currentType === 'expense' ? '支出' : '收入'}分类名称`);
-    if (!name || !name.trim()) return;
-    const ledger = getActiveLedger();
-    if (currentType === 'expense') {
-      if (!ledger.customExpenseCats) ledger.customExpenseCats = [];
-      if (!ledger.customExpenseCats.includes(name.trim())) ledger.customExpenseCats.push(name.trim());
-    } else {
-      if (!ledger.customIncomeCats) ledger.customIncomeCats = [];
-      if (!ledger.customIncomeCats.includes(name.trim())) ledger.customIncomeCats.push(name.trim());
+  window.addNewCategory = function() {
+    const typeName = currentType === 'expense' ? '支出' : '收入';
+    const name = prompt(`输入新的${typeName}分类名称`);
+    if (name && name.trim()) {
+      const trimmed = name.trim();
+      const ledger = getActiveLedger();
+      if (currentType === 'expense') {
+        if (!ledger.customExpenseCats.includes(trimmed)) ledger.customExpenseCats.push(trimmed);
+      } else {
+        if (!ledger.customIncomeCats.includes(trimmed)) ledger.customIncomeCats.push(trimmed);
+      }
+      saveData();
+      currentCategory = trimmed;
+      renderCategoryChips();
     }
-    await supabase.from('ledgers').upsert(ledger);
-    currentCategory = name.trim();
-    renderCategoryChips();
   };
 
   document.getElementById('typeSegment').addEventListener('click', e => {
     if (e.target.tagName === 'BUTTON') {
-      document.querySelectorAll('#typeSegment button').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      currentType = e.target.dataset.type;
-      const cats = getCategoriesForType(currentType);
-      currentCategory = cats[0] || '';
-      renderCategoryChips();
+      const type = e.target.dataset.type;
+      if (type) {
+        currentType = type;
+        document.querySelectorAll('#typeSegment button').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        const cats = getCategoriesForType(type);
+        currentCategory = cats[0] || '';
+        renderCategoryChips();
+      }
     }
   });
 
@@ -365,49 +545,54 @@
     if (!amountStr || isNaN(parseFloat(amountStr))) return alert('请输入有效金额');
     const amount = Math.round(parseFloat(amountStr) * 100) / 100;
     if (!dateVal) return alert('请选择日期');
-    const record = {
+    appData.records.push({
       id: Date.now(),
-      ledger_id: appData.activeLedgerId,
+      ledgerId: appData.activeLedgerId,
       type: currentType,
-      amount, category: currentCategory, date: dateVal, note, refund: false
-    };
-    await supabase.from('records').upsert(record);
+      amount: amount,
+      category: currentCategory,
+      date: dateVal,
+      note: note,
+      refund: false
+    });
+    await saveData();
     document.getElementById('amountInput').value = '';
     document.getElementById('noteInput').value = '';
-    await loadFromCloud(); // 重新加载最新数据
+    refreshUI();
   };
 
   window.deleteRecord = async function(id) {
     if (!confirm('确定删除吗？')) return;
-    await supabase.from('records').delete().eq('id', id);
-    await loadFromCloud();
+    appData.records = appData.records.filter(r => r.id !== id);
+    await saveData();
+    refreshUI();
   };
   window.toggleRefund = async function(id) {
     const record = appData.records.find(r => r.id === id);
-    if (record) {
-      await supabase.from('records').update({ refund: !record.refund }).eq('id', id);
-      await loadFromCloud();
-    }
+    if (record) { record.refund = !record.refund; await saveData(); refreshUI(); }
   };
 
   function renderBillList() {
-    const records = appData.records.filter(r => r.ledger_id === appData.activeLedgerId).slice(0, 15);
     const list = document.getElementById('billList');
+    const records = appData.records
+      .filter(r => r.ledgerId === appData.activeLedgerId)
+      .sort((a,b) => b.date.localeCompare(a.date) || (b.id - a.id));
     if (records.length === 0) {
       list.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">还没有记录 ✍️</div>';
       return;
     }
-    list.innerHTML = records.map(r => {
+    list.innerHTML = records.slice(0, 15).map(r => {
+      const emoji = getCatEmoji(r.category);
       const sign = r.type === 'expense' ? '-' : '+';
       const cls = r.type === 'expense' ? 'expense' : 'income';
-      const refundCls = r.refund ? 'text-decoration:line-through;color:#94a3b8;' : '';
+      const refundCls = r.refund ? 'refund-text' : '';
       return `<div class="bill-item">
-        <div class="bill-icon">${getCatEmoji(r.category)}</div>
+        <div class="bill-icon">${emoji}</div>
         <div class="bill-info">
-          <div class="bill-category" style="${refundCls}">${r.category} ${r.refund?'(已退款)':''}</div>
-          <div class="bill-meta">${r.date} ${r.note||''}</div>
+          <div class="bill-category ${refundCls}">${r.category} ${r.refund?'(已退款)':''}</div>
+          <div class="bill-meta"><span>${r.date}</span>${r.note?`<span>${r.note}</span>`:''}</div>
         </div>
-        <div class="bill-amount ${cls}" style="${refundCls}">${sign}¥${r.amount.toFixed(2)}</div>
+        <div class="bill-amount ${cls} ${refundCls}">${sign}¥${r.amount.toFixed(2)}</div>
         <div class="bill-actions">
           <button class="btn-icon" onclick="toggleRefund(${r.id})">↩️</button>
           <button class="btn-icon" onclick="deleteRecord(${r.id})">🗑️</button>
@@ -426,8 +611,9 @@
   function drawStats() {
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
+    const ledgerId = appData.activeLedgerId;
     const range = getActiveRange();
-    const records = appData.records.filter(r => r.ledger_id === appData.activeLedgerId && r.date >= range.start && r.date <= range.end);
+    const records = appData.records.filter(r => r.ledgerId === ledgerId && r.date >= range.start && r.date <= range.end);
     if (currentStatsView === 'pie') drawPieChart(ctx, canvas.width, canvas.height, records);
     else drawTrendChart(ctx, canvas.width, canvas.height, records, range);
   }
@@ -436,11 +622,11 @@
     ctx.clearRect(0,0,w,h);
     const expenses = records.filter(r => r.type === 'expense' && !r.refund);
     const totals = {};
-    expenses.forEach(r => totals[r.category] = (totals[r.category] || 0) + r.amount);
+    expenses.forEach(r => { totals[r.category] = (totals[r.category] || 0) + r.amount; });
     const entries = Object.entries(totals);
     const total = entries.reduce((s, [,v]) => s+v, 0);
     if (total === 0) {
-      ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif';
+      ctx.font = '14px sans-serif'; ctx.fillStyle = '#94a3b8';
       ctx.fillText('所选时段无支出', 100, 100);
       document.getElementById('legendArea').innerHTML = '';
       return;
@@ -449,79 +635,81 @@
     let startAngle = -Math.PI/2;
     const colors = ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#C9CBCF'];
     entries.forEach(([cat, val], i) => {
+      const slice = (val/total)*2*Math.PI;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, radius, startAngle, startAngle + (val/total)*2*Math.PI);
+      ctx.arc(cx, cy, radius, startAngle, startAngle+slice);
       ctx.closePath();
       ctx.fillStyle = colors[i % colors.length];
       ctx.fill();
-      startAngle += (val/total)*2*Math.PI;
+      startAngle += slice;
     });
-    document.getElementById('legendArea').innerHTML = entries.map(([cat, val], i) => {
-      return `<div style="display:flex;align-items:center;gap:4px;font-size:13px;margin:4px 0;">
+    let legend = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    entries.forEach(([cat,val], i) => {
+      const pct = ((val/total)*100).toFixed(1);
+      legend += `<div style="display:flex;align-items:center;gap:4px;font-size:13px;">
         <span style="width:10px;height:10px;border-radius:50%;background:${colors[i%colors.length]};display:inline-block;"></span>
-        ${getCatEmoji(cat)} ${cat} ¥${val.toFixed(0)}
+        ${getCatEmoji(cat)} ${cat} ¥${val.toFixed(0)} (${pct}%)
       </div>`;
-    }).join('');
+    });
+    legend += '</div>';
+    document.getElementById('legendArea').innerHTML = legend;
   }
 
   function drawTrendChart(ctx, w, h, records, range) {
     ctx.clearRect(0,0,w,h);
     if (records.length === 0) {
-      ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif';
+      ctx.font = '14px sans-serif'; ctx.fillStyle = '#94a3b8';
       ctx.fillText('无数据', 120, 100);
       document.getElementById('legendArea').innerHTML = '';
       return;
     }
-    const diffDays = Math.ceil((new Date(range.end) - new Date(range.start)) / (1000*60*60*24));
+    const start = new Date(range.start);
+    const end = new Date(range.end);
+    const diffDays = Math.ceil((end - start) / (1000*60*60*24));
     let groupKey = diffDays <= 31 ? 'day' : (diffDays <= 90 ? 'week' : 'month');
     const groups = {};
     records.filter(r => r.type === 'expense' && !r.refund).forEach(r => {
-      const d = new Date(r.date);
       let key;
+      const d = new Date(r.date);
       if (groupKey === 'day') key = formatDateStr(d);
       else if (groupKey === 'week') {
         const day = d.getDay() || 7;
         const monday = new Date(d); monday.setDate(d.getDate() - day + 1);
-        key = formatDateStr(monday);
+        key = formatDateStr(monday) + ' 周';
       } else key = getMonthKey(r.date);
       groups[key] = (groups[key] || 0) + r.amount;
     });
     const keys = Object.keys(groups).sort();
     const values = keys.map(k => groups[k]);
     const maxVal = Math.max(...values, 1);
-    const pad = { top: 20, right: 20, bottom: 30, left: 40 };
-    const gw = w - pad.left - pad.right, gh = h - pad.top - pad.bottom;
+    const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+    const graphW = w - padding.left - padding.right;
+    const graphH = h - padding.top - padding.bottom;
     ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.5;
     for (let i=0;i<=4;i++) {
-      const y = pad.top + (i/4)*gh;
-      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w-pad.right, y); ctx.stroke();
+      const y = padding.top + (i/4)*graphH;
+      ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(w-padding.right, y); ctx.stroke();
     }
     ctx.beginPath();
     ctx.strokeStyle = '#4f8bff'; ctx.lineWidth = 2.5;
-    values.forEach((v, i) => {
-      const x = pad.left + (i/(values.length-1))*gw;
-      const y = pad.top + gh - (v/maxVal)*gh;
-      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    values.forEach((val, idx) => {
+      const x = padding.left + (idx/(values.length-1))*graphW;
+      const y = padding.top + graphH - (val/maxVal)*graphH;
+      if (idx===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     });
     ctx.stroke();
-    values.forEach((v, i) => {
-      const x = pad.left + (i/(values.length-1))*gw;
-      const y = pad.top + gh - (v/maxVal)*gh;
-      ctx.fillStyle = '#4f8bff'; ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+    values.forEach((val, idx) => {
+      const x = padding.left + (idx/(values.length-1))*graphW;
+      const y = padding.top + graphH - (val/maxVal)*graphH;
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, 2*Math.PI);
+      ctx.fillStyle = '#4f8bff'; ctx.fill();
       ctx.fillStyle = '#1e293b'; ctx.font = '10px sans-serif';
-      ctx.fillText(keys[i], x-15, h-8);
+      ctx.fillText(keys[idx], x-15, h-8);
+      ctx.fillText('¥'+val.toFixed(0), x-15, y-12);
     });
-    document.getElementById('legendArea').innerHTML = `<p style="text-align:center;color:#64748b;">趋势图</p>`;
+    document.getElementById('legendArea').innerHTML = `<p style="text-align:center;color:#64748b;">${groupKey==='day'?'每日':groupKey==='week'?'每周':'每月'}支出趋势</p>`;
   }
-
-  function switchPage(page) {
-    currentPage = page;
-    ['record','stats','mine'].forEach(p => document.getElementById(`page-${p}`).classList.toggle('active', p === page));
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.page === page));
-    if (page === 'stats') drawStats();
-  }
-  document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
 
   document.querySelector('.time-filters').addEventListener('click', e => {
     if (e.target.classList.contains('time-filter')) {
@@ -548,8 +736,22 @@
     }
   });
 
-  // 账本管理
-  window.openLedgerSwitcher = async function() {
+  function switchPage(page) {
+    currentPage = page;
+    ['record','stats','mine'].forEach(p => {
+      document.getElementById(`page-${p}`).classList.toggle('active', p === page);
+    });
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.page === page);
+    });
+    if (page === 'stats') drawStats();
+    if (page === 'record') refreshUI();
+  }
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => switchPage(item.dataset.page));
+  });
+
+  window.openLedgerSwitcher = function() {
     const ledgers = appData.ledgers;
     let msg = '选择账本：\n';
     ledgers.forEach((l, i) => msg += `${i+1}. ${l.name} (预算${l.budget})\n`);
@@ -560,36 +762,56 @@
       const name = prompt('输入项目名称（如“旅行”）');
       if (name && name.trim()) {
         const budget = parseFloat(prompt('设置预算金额')) || 0;
-        const { data: newLedger } = await supabase.from('ledgers').insert({
-          name: name.trim(), type: 'project', budget, custom_expense_cats: [], custom_income_cats: []
-        }).select().single();
+        const newLedger = {
+          id: Date.now().toString(),
+          name: name.trim(),
+          type: 'project',
+          budget: budget,
+          customExpenseCats: [],
+          customIncomeCats: []
+        };
         appData.ledgers.push(newLedger);
         appData.activeLedgerId = newLedger.id;
+        saveData();
         refreshUI();
-        if (currentPage === 'stats') drawStats();
       }
     } else {
       const idx = parseInt(choice) - 1;
       if (idx >= 0 && idx < ledgers.length) {
         appData.activeLedgerId = ledgers[idx].id;
+        saveData();
         refreshUI();
         if (currentPage === 'stats') drawStats();
       }
     }
   };
-  
-  window.openLedgerManager = async function() {
+  window.openLedgerManager = function() {
     let msg = '管理账本：\n';
-    appData.ledgers.forEach((l, i) => msg += `${i+1}. ${l.name} (预算${l.budget})\n`);
-    const action = prompt(msg + '输入编号修改预算');
+    appData.ledgers.forEach((l, i) => msg += `${i+1}. ${l.name} ${l.type==='daily'?'':'📌'} (预算${l.budget})\n`);
+    msg += '操作：输入编号修改预算，输入“d编号”删除';
+    const action = prompt(msg);
     if (!action) return;
-    const idx = parseInt(action) - 1;
-    if (idx >= 0 && idx < appData.ledgers.length) {
-      const newBudget = parseFloat(prompt('新预算', appData.ledgers[idx].budget));
-      if (!isNaN(newBudget)) {
-        appData.ledgers[idx].budget = newBudget;
-        await supabase.from('ledgers').upsert(appData.ledgers[idx]);
-        refreshUI();
+    if (action.startsWith('d')) {
+      const idx = parseInt(action.substring(1)) - 1;
+      if (idx >= 0 && idx < appData.ledgers.length && appData.ledgers.length > 1) {
+        if (confirm(`删除账本“${appData.ledgers[idx].name}”及其所有记录？`)) {
+          const id = appData.ledgers[idx].id;
+          appData.records = appData.records.filter(r => r.ledgerId !== id);
+          appData.ledgers.splice(idx,1);
+          if (appData.activeLedgerId === id) appData.activeLedgerId = appData.ledgers[0].id;
+          saveData();
+          refreshUI();
+        }
+      } else alert('至少保留一个账本');
+    } else {
+      const idx = parseInt(action) - 1;
+      if (idx >= 0 && idx < appData.ledgers.length) {
+        const newBudget = parseFloat(prompt(`为“${appData.ledgers[idx].name}”设置新预算`, appData.ledgers[idx].budget));
+        if (!isNaN(newBudget) && newBudget >= 0) {
+          appData.ledgers[idx].budget = newBudget;
+          saveData();
+          refreshUI();
+        }
       }
     }
   };
@@ -601,28 +823,23 @@
     a.download = `记账备份_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
   };
-  window.importDataPrompt = async function() {
+  window.importDataPrompt = function() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = async (e) => {
+    input.onchange = e => {
       const file = e.target.files[0];
       const reader = new FileReader();
-      reader.onload = async (ev) => {
+      reader.onload = async ev => {
         try {
           const imported = JSON.parse(ev.target.result);
           if (imported.ledgers && imported.records) {
-            if (confirm('导入将覆盖云端数据，确定吗？')) {
-              // 清空云端再导入
-              await supabase.from('records').delete().neq('id', 0); // 删除所有记录
-              await supabase.from('ledgers').delete().neq('id', 0);
-              for (let l of imported.ledgers) {
-                await supabase.from('ledgers').insert(l);
-              }
-              for (let r of imported.records) {
-                await supabase.from('records').insert(r);
-              }
-              await loadFromCloud();
+            if (confirm('导入将覆盖现有数据，确定？')) {
+              appData = imported;
+              await saveData();
+              refreshUI();
+              if (currentPage === 'stats') drawStats();
+              alert('导入成功');
             }
           } else alert('文件格式错误');
         } catch(ex) { alert('解析失败'); }
@@ -632,8 +849,13 @@
     input.click();
   };
 
-  // 初始化：加载云端数据
-  loadFromCloud();
+  // 启动应用：先自动认证，再显示界面
+  (async function init() {
+    await autoAuth();
+    document.getElementById('appMain').style.display = 'block';
+    refreshUI();
+    if (currentPage === 'stats') drawStats();
+  })();
 </script>
 </body>
 </html>
