@@ -30,36 +30,11 @@
     .app-container {
       width: 100%; max-width: 420px; padding: 16px;
       display: flex; flex-direction: column; gap: 16px;
-      animation: fadeIn 0.3s;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .auth-screen {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 999;
-    }
-    .auth-screen h2 { font-size: 26px; margin-bottom: 8px; }
-    .auth-screen p { color: #64748b; margin-bottom: 24px; font-size: 14px; }
-    .auth-screen input {
-      width: 260px; padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 16px;
-      font-size: 16px; background: white; outline: none; margin-bottom: 12px;
-    }
-    .auth-screen input:focus { border-color: var(--primary); }
-    
-    .btn-primary {
-      background: var(--primary); color: white; border: none; padding: 14px 32px;
-      border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer;
-      width: 260px; transition: all 0.2s;
-    }
-    .btn-primary:active { transform: scale(0.96); }
-    
     .card {
       background: var(--card); border-radius: var(--radius); padding: 20px;
       box-shadow: var(--shadow);
     }
-    
     .ledger-switch {
       display: flex; align-items: center; justify-content: space-between;
       background: var(--card); border-radius: 16px; padding: 12px 16px;
@@ -67,7 +42,6 @@
     }
     .ledger-name { font-weight: 600; font-size: 17px; }
     .ledger-budget-tag { font-size: 13px; color: var(--primary); background: rgba(79,139,255,0.1); padding: 2px 10px; border-radius: 12px; }
-    
     .budget-card { display: flex; flex-direction: column; gap: 12px; }
     .budget-header { display: flex; justify-content: space-between; align-items: baseline; }
     .budget-header .label { font-size: 14px; color: var(--text-secondary); }
@@ -77,7 +51,6 @@
     .progress-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); }
     .warning-text { color: #f59e0b; font-weight: 500; }
     .over-text { color: #ef4444; font-weight: 500; }
-    
     .segmented {
       display: flex; background: #f1f5f9; border-radius: 12px; padding: 4px; margin-bottom: 16px;
     }
@@ -88,7 +61,6 @@
     .segmented button.active { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
     .segmented button.expense.active { color: var(--expense); }
     .segmented button.income.active { color: var(--income); }
-    
     .category-scroll {
       display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px;
       scrollbar-width: none;
@@ -101,13 +73,11 @@
     }
     .cat-chip .emoji { font-size: 24px; }
     .cat-chip.active { background: white; border: 1px solid var(--primary); color: var(--primary); }
-    
     .new-cat-btn {
       display: block; width: 100%; margin-top: 12px; padding: 12px;
       background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 14px;
       font-size: 15px; color: #64748b; cursor: pointer; text-align: center;
     }
-    
     .amount-input {
       width: 100%; font-size: 36px; font-weight: 700; border: none;
       border-bottom: 2px solid #e2e8f0; padding: 12px 0; outline: none;
@@ -121,7 +91,6 @@
       width: 100%; padding: 16px; background: var(--primary); color: white;
       border: none; border-radius: 16px; font-size: 18px; font-weight: 700; cursor: pointer;
     }
-    
     .bill-item {
       display: flex; align-items: center; padding: 12px 0;
       border-bottom: 1px solid #f1f5f9;
@@ -141,7 +110,6 @@
       width: 32px; height: 32px; border-radius: 10px; border: none;
       background: #f1f5f9; font-size: 14px; cursor: pointer;
     }
-    
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
@@ -155,7 +123,6 @@
     }
     .nav-item.active { color: var(--primary); background: rgba(79,139,255,0.08); }
     .nav-item .icon { font-size: 22px; }
-    
     .time-filters { display: flex; gap: 8px; margin-bottom: 16px; }
     .time-filter {
       padding: 8px 16px; border-radius: 20px; background: #f1f5f9;
@@ -169,118 +136,92 @@
     }
     .stats-tab.active { background: var(--primary); color: white; }
     canvas { width: 100%; border-radius: 16px; background: #f9fafb; }
-    
     .hidden-page { display: none; }
     .page.active { display: block; }
-    .user-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 0; font-size: 13px; color: #64748b;
-    }
-    .user-bar button { background: none; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 12px; cursor: pointer; }
   </style>
 </head>
 <body>
+<div class="app-container">
+  <div class="ledger-switch" onclick="openLedgerSwitcher()">
+    <div><span class="ledger-name" id="currentLedgerName">日常生活</span></div>
+    <span class="ledger-budget-tag" id="currentLedgerBudget">预算 ¥8000</span>
+  </div>
 
-<!-- 认证页面（仅账号密码） -->
-<div class="auth-screen" id="authScreen">
-  <span style="font-size:48px; margin-bottom:16px;">📒</span>
-  <h2>极简记账</h2>
-  <p>输入账号登录</p>
-  <input type="text" id="authUsername" placeholder="账号">
-  <input type="password" id="authPassword" placeholder="密码（至少6位）">
-  <button class="btn-primary" onclick="handleAuth()">登录</button>
-  <p style="margin-top:12px; font-size:12px; color:#94a3b8;">首次输入自动创建账号</p>
+  <div id="page-record" class="page active">
+    <div class="card budget-card">
+      <div class="budget-header">
+        <span class="label">本月预算</span>
+        <span class="value" id="budgetUsed">¥0</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-fill" id="budgetBar" style="width:0%;"></div>
+      </div>
+      <div class="progress-info">
+        <span id="budgetRemain">剩余 ¥0</span>
+        <span id="budgetPercent">0%</span>
+      </div>
+      <div id="budgetAlert" style="font-size:13px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="segmented" id="typeSegment">
+        <button class="expense active" data-type="expense">📉 支出</button>
+        <button class="income" data-type="income">📈 收入</button>
+      </div>
+      <div class="category-scroll" id="catContainer"></div>
+      <button class="new-cat-btn" onclick="addNewCategory()">➕ 新建分类</button>
+      <input type="number" id="amountInput" class="amount-input" placeholder="0.00" step="0.01" inputmode="decimal">
+      <input type="date" id="dateInput" class="date-input">
+      <input type="text" id="noteInput" class="note-input" placeholder="备注（可选）">
+      <button class="btn-save" onclick="submitRecord()">💾 保存记录</button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:12px;">📋 最近账单</h3>
+      <div id="billList"></div>
+    </div>
+  </div>
+
+  <div id="page-stats" class="page hidden-page">
+    <div class="card">
+      <div class="time-filters">
+        <button class="time-filter active" data-range="thisMonth">本月</button>
+        <button class="time-filter" data-range="thisWeek">本周</button>
+        <button class="time-filter" data-range="custom">自定义</button>
+      </div>
+      <div class="stats-tabs" id="statsTabs">
+        <div class="stats-tab active" data-view="pie">📊 分类饼图</div>
+        <div class="stats-tab" data-view="trend">📈 支出趋势</div>
+      </div>
+      <div id="customRange" style="display:none; gap:8px; margin-bottom:12px;">
+        <input type="date" id="startDate" style="flex:1;">
+        <input type="date" id="endDate" style="flex:1;">
+        <button onclick="applyCustomRange()" style="padding:8px 12px;">确定</button>
+      </div>
+      <canvas id="mainCanvas" width="320" height="220"></canvas>
+      <div id="legendArea" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <div id="page-mine" class="page hidden-page">
+    <div class="card" style="display:flex; flex-direction:column; gap:12px;">
+      <button class="btn-primary" style="width:100%;" onclick="openLedgerManager()">📒 管理账本</button>
+      <button class="btn-primary" style="width:100%; background:#0ea5e9;" onclick="exportData()">⬇️ 导出备份</button>
+      <button class="btn-primary" style="width:100%; background:#f59e0b;" onclick="importDataPrompt()">⬆️ 导入备份</button>
+    </div>
+  </div>
 </div>
 
-<!-- 主应用 -->
-<div id="appMain" style="display:none;">
-  <div class="app-container">
-    <div class="user-bar">
-      <span id="userEmail"></span>
-      <button onclick="logout()">退出</button>
-    </div>
-    
-    <div class="ledger-switch" onclick="openLedgerSwitcher()">
-      <div><span class="ledger-name" id="currentLedgerName">日常生活</span></div>
-      <span class="ledger-budget-tag" id="currentLedgerBudget">预算 ¥8000</span>
-    </div>
-
-    <div id="page-record" class="page active">
-      <div class="card budget-card">
-        <div class="budget-header">
-          <span class="label">本月预算</span>
-          <span class="value" id="budgetUsed">¥0</span>
-        </div>
-        <div class="progress-wrap">
-          <div class="progress-fill" id="budgetBar" style="width:0%;"></div>
-        </div>
-        <div class="progress-info">
-          <span id="budgetRemain">剩余 ¥0</span>
-          <span id="budgetPercent">0%</span>
-        </div>
-        <div id="budgetAlert" style="font-size:13px;"></div>
-      </div>
-
-      <div class="card">
-        <div class="segmented" id="typeSegment">
-          <button class="expense active" data-type="expense">📉 支出</button>
-          <button class="income" data-type="income">📈 收入</button>
-        </div>
-        <div class="category-scroll" id="catContainer"></div>
-        <button class="new-cat-btn" onclick="addNewCategory()">➕ 新建分类</button>
-        <input type="number" id="amountInput" class="amount-input" placeholder="0.00" step="0.01" inputmode="decimal">
-        <input type="date" id="dateInput" class="date-input">
-        <input type="text" id="noteInput" class="note-input" placeholder="备注（可选）">
-        <button class="btn-save" onclick="submitRecord()">💾 保存记录</button>
-      </div>
-
-      <div class="card">
-        <h3 style="margin-bottom:12px;">📋 最近账单</h3>
-        <div id="billList"></div>
-      </div>
-    </div>
-
-    <div id="page-stats" class="page hidden-page">
-      <div class="card">
-        <div class="time-filters">
-          <button class="time-filter active" data-range="thisMonth">本月</button>
-          <button class="time-filter" data-range="thisWeek">本周</button>
-          <button class="time-filter" data-range="custom">自定义</button>
-        </div>
-        <div class="stats-tabs" id="statsTabs">
-          <div class="stats-tab active" data-view="pie">📊 分类饼图</div>
-          <div class="stats-tab" data-view="trend">📈 支出趋势</div>
-        </div>
-        <div id="customRange" style="display:none; gap:8px; margin-bottom:12px;">
-          <input type="date" id="startDate" style="flex:1;">
-          <input type="date" id="endDate" style="flex:1;">
-          <button onclick="applyCustomRange()" style="padding:8px 12px;">确定</button>
-        </div>
-        <canvas id="mainCanvas" width="320" height="220"></canvas>
-        <div id="legendArea" style="margin-top:12px;"></div>
-      </div>
-    </div>
-
-    <div id="page-mine" class="page hidden-page">
-      <div class="card" style="display:flex; flex-direction:column; gap:12px;">
-        <button class="btn-primary" style="width:100%;" onclick="openLedgerManager()">📒 管理账本</button>
-        <button class="btn-primary" style="width:100%; background:#0ea5e9;" onclick="exportData()">⬇️ 导出备份</button>
-        <button class="btn-primary" style="width:100%; background:#f59e0b;" onclick="importDataPrompt()">⬆️ 导入备份</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="bottom-nav" id="bottomNav">
-    <div class="nav-item active" data-page="record"><span class="icon">✏️</span><span>记账</span></div>
-    <div class="nav-item" data-page="stats"><span class="icon">📊</span><span>统计</span></div>
-    <div class="nav-item" data-page="mine"><span class="icon">⚙️</span><span>我的</span></div>
-  </div>
+<div class="bottom-nav" id="bottomNav">
+  <div class="nav-item active" data-page="record"><span class="icon">✏️</span><span>记账</span></div>
+  <div class="nav-item" data-page="stats"><span class="icon">📊</span><span>统计</span></div>
+  <div class="nav-item" data-page="mine"><span class="icon">⚙️</span><span>我的</span></div>
 </div>
 
 <script>
-  // ⚠️ 把下面两处替换成你自己的 Supabase 信息
-  const SUPABASE_URL = 'https://wrwsxucnjzwmgxvnzjls.supabase.co';  // 改成你的
-  const SUPABASE_KEY = 'sb_publishable_f2Q-tWOmg-zzFsSikuTWIQ_tmFuXbMi';  // 改成你的
+  // ⚠️ 替换成你的 Supabase 信息
+  const SUPABASE_URL = 'https://wrwsxucnjzwmgxvnzjls.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_f2Q-tWOmg-zzFsSikuTWIQ_tmFuXbMi';
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   
@@ -290,8 +231,7 @@
     '餐饮':'🍔', '交通':'🚌', '购物':'🛍️', '娱乐':'🎉', '居家':'🏠',
     '微信':'💬', '农业银行':'🏦', '农村信用社':'🏦'
   };
-  
-  let currentUser = null;
+
   let appData = { ledgers: [], activeLedgerId: null, records: [] };
   let currentType = 'expense';
   let currentCategory = '餐饮';
@@ -300,128 +240,23 @@
   let currentTimeRange = 'thisMonth';
   let customStart = null, customEnd = null;
 
-  // ========== 认证（简单账号） ==========
-  window.handleAuth = async function() {
-    const username = document.getElementById('authUsername').value.trim();
-    const password = document.getElementById('authPassword').value;
-    if (!username || !password) return alert('请输入账号和密码');
-    if (password.length < 6) return alert('密码至少6位');
-    
-    // 用账号构造一个虚拟邮箱，避免 Supabase 邮箱格式限制
-    const email = username + '@user.local';
-    
-    // 先尝试登录
-    let { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    
-    // 如果用户不存在，自动注册
-    if (error && error.message.includes('Invalid login credentials')) {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-      if (signUpError) {
-        alert('创建账号失败：' + signUpError.message);
-        return;
-      }
-      // 注册后可能要求验证邮箱，这里需要禁用邮箱确认，直接登录
-      if (signUpData.user) {
-        // 再次尝试登录
-        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-        if (loginError) {
-          alert('自动登录失败：' + loginError.message);
-          return;
-        }
-        data = loginData;
-      }
-    } else if (error) {
-      alert('登录失败：' + error.message);
-      return;
-    }
-    
-    if (data.user) {
-      currentUser = data.user;
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('appMain').style.display = 'block';
-      document.getElementById('userEmail').innerText = username;  // 显示账号名
-      await loadFromCloud();
-    }
-  };
-
-  window.logout = async function() {
-    await supabase.auth.signOut();
-    currentUser = null;
-    appData = { ledgers: [], activeLedgerId: null, records: [] };
-    document.getElementById('appMain').style.display = 'none';
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('authUsername').value = '';
-    document.getElementById('authPassword').value = '';
-  };
-
-  // 自动恢复会话
-  (async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      currentUser = data.session.user;
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('appMain').style.display = 'block';
-      // 显示账号名（去掉虚拟域名）
-      const username = currentUser.email.replace('@user.local', '');
-      document.getElementById('userEmail').innerText = username;
-      await loadFromCloud();
-    }
-  })();
-
-  // ========== 云端数据操作 ==========
+  // 从云端加载所有数据
   async function loadFromCloud() {
-    const { data: ledgers } = await supabase.from('ledgers').select('*').eq('user_id', currentUser.id);
+    const { data: ledgers } = await supabase.from('ledgers').select('*');
     appData.ledgers = ledgers || [];
     if (appData.ledgers.length === 0) {
       const { data: newLedger } = await supabase.from('ledgers').insert({
-        user_id: currentUser.id,
-        name: '日常生活',
-        type: 'daily',
-        budget: 8000,
-        custom_expense_cats: [],
-        custom_income_cats: []
+        name: '日常生活', type: 'daily', budget: 8000, custom_expense_cats: [], custom_income_cats: []
       }).select().single();
       appData.ledgers = [newLedger];
     }
     appData.activeLedgerId = appData.ledgers[0].id;
     
-    const { data: records } = await supabase.from('records').select('*').eq('user_id', currentUser.id).order('date', { ascending: false });
+    const { data: records } = await supabase.from('records').select('*').order('date', { ascending: false });
     appData.records = records || [];
-    
     refreshUI();
   }
 
-  async function saveLedgerToCloud(ledger) {
-    await supabase.from('ledgers').upsert({
-      id: ledger.id,
-      user_id: currentUser.id,
-      name: ledger.name,
-      type: ledger.type,
-      budget: ledger.budget,
-      custom_expense_cats: ledger.customExpenseCats || [],
-      custom_income_cats: ledger.customIncomeCats || []
-    });
-  }
-
-  async function saveRecordToCloud(record) {
-    await supabase.from('records').upsert({
-      id: record.id,
-      user_id: currentUser.id,
-      ledger_id: record.ledgerId,
-      type: record.type,
-      amount: record.amount,
-      category: record.category,
-      date: record.date,
-      note: record.note || '',
-      refund: record.refund || false
-    });
-  }
-
-  async function deleteRecordFromCloud(id) {
-    await supabase.from('records').delete().eq('id', id);
-  }
-
-  // ========== 工具函数 ==========
   function getActiveLedger() {
     return appData.ledgers.find(l => l.id === appData.activeLedgerId) || appData.ledgers[0];
   }
@@ -495,7 +330,8 @@
     });
   }
 
-  window.addNewCategory = function() {
+  // 事件处理
+  window.addNewCategory = async function() {
     const name = prompt(`输入新${currentType === 'expense' ? '支出' : '收入'}分类名称`);
     if (!name || !name.trim()) return;
     const ledger = getActiveLedger();
@@ -506,7 +342,7 @@
       if (!ledger.customIncomeCats) ledger.customIncomeCats = [];
       if (!ledger.customIncomeCats.includes(name.trim())) ledger.customIncomeCats.push(name.trim());
     }
-    saveLedgerToCloud(ledger);
+    await supabase.from('ledgers').upsert(ledger);
     currentCategory = name.trim();
     renderCategoryChips();
   };
@@ -531,34 +367,31 @@
     if (!dateVal) return alert('请选择日期');
     const record = {
       id: Date.now(),
-      ledgerId: appData.activeLedgerId,
+      ledger_id: appData.activeLedgerId,
       type: currentType,
       amount, category: currentCategory, date: dateVal, note, refund: false
     };
-    appData.records.unshift(record);
-    await saveRecordToCloud(record);
+    await supabase.from('records').upsert(record);
     document.getElementById('amountInput').value = '';
     document.getElementById('noteInput').value = '';
-    refreshUI();
+    await loadFromCloud(); // 重新加载最新数据
   };
 
   window.deleteRecord = async function(id) {
     if (!confirm('确定删除吗？')) return;
-    appData.records = appData.records.filter(r => r.id !== id);
-    await deleteRecordFromCloud(id);
-    refreshUI();
+    await supabase.from('records').delete().eq('id', id);
+    await loadFromCloud();
   };
   window.toggleRefund = async function(id) {
     const record = appData.records.find(r => r.id === id);
     if (record) {
-      record.refund = !record.refund;
-      await saveRecordToCloud(record);
-      refreshUI();
+      await supabase.from('records').update({ refund: !record.refund }).eq('id', id);
+      await loadFromCloud();
     }
   };
 
   function renderBillList() {
-    const records = appData.records.filter(r => r.ledgerId === appData.activeLedgerId).slice(0, 15);
+    const records = appData.records.filter(r => r.ledger_id === appData.activeLedgerId).slice(0, 15);
     const list = document.getElementById('billList');
     if (records.length === 0) {
       list.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">还没有记录 ✍️</div>';
@@ -583,7 +416,6 @@
     }).join('');
   }
 
-  // ========== 统计 ==========
   function getActiveRange() {
     if (currentTimeRange === 'thisWeek') return getWeekRange();
     if (currentTimeRange === 'thisMonth') return getMonthRange();
@@ -595,7 +427,7 @@
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
     const range = getActiveRange();
-    const records = appData.records.filter(r => r.ledgerId === appData.activeLedgerId && r.date >= range.start && r.date <= range.end);
+    const records = appData.records.filter(r => r.ledger_id === appData.activeLedgerId && r.date >= range.start && r.date <= range.end);
     if (currentStatsView === 'pie') drawPieChart(ctx, canvas.width, canvas.height, records);
     else drawTrendChart(ctx, canvas.width, canvas.height, records, range);
   }
@@ -683,7 +515,6 @@
     document.getElementById('legendArea').innerHTML = `<p style="text-align:center;color:#64748b;">趋势图</p>`;
   }
 
-  // 页面切换
   function switchPage(page) {
     currentPage = page;
     ['record','stats','mine'].forEach(p => document.getElementById(`page-${p}`).classList.toggle('active', p === page));
@@ -692,7 +523,6 @@
   }
   document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
 
-  // 时间筛选
   document.querySelector('.time-filters').addEventListener('click', e => {
     if (e.target.classList.contains('time-filter')) {
       document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('active'));
@@ -720,18 +550,34 @@
 
   // 账本管理
   window.openLedgerSwitcher = async function() {
-    const name = prompt('输入新账本名称（如“旅行”）');
-    if (!name) return;
-    const budget = parseFloat(prompt('设置预算金额')) || 0;
-    const { data: newLedger } = await supabase.from('ledgers').insert({
-      user_id: currentUser.id, name: name.trim(), type: 'project', budget,
-      custom_expense_cats: [], custom_income_cats: []
-    }).select().single();
-    appData.ledgers.push(newLedger);
-    appData.activeLedgerId = newLedger.id;
-    refreshUI();
-    if (currentPage === 'stats') drawStats();
+    const ledgers = appData.ledgers;
+    let msg = '选择账本：\n';
+    ledgers.forEach((l, i) => msg += `${i+1}. ${l.name} (预算${l.budget})\n`);
+    msg += '0. 新建项目账本';
+    const choice = prompt(msg, '');
+    if (choice === null) return;
+    if (choice === '0') {
+      const name = prompt('输入项目名称（如“旅行”）');
+      if (name && name.trim()) {
+        const budget = parseFloat(prompt('设置预算金额')) || 0;
+        const { data: newLedger } = await supabase.from('ledgers').insert({
+          name: name.trim(), type: 'project', budget, custom_expense_cats: [], custom_income_cats: []
+        }).select().single();
+        appData.ledgers.push(newLedger);
+        appData.activeLedgerId = newLedger.id;
+        refreshUI();
+        if (currentPage === 'stats') drawStats();
+      }
+    } else {
+      const idx = parseInt(choice) - 1;
+      if (idx >= 0 && idx < ledgers.length) {
+        appData.activeLedgerId = ledgers[idx].id;
+        refreshUI();
+        if (currentPage === 'stats') drawStats();
+      }
+    }
   };
+  
   window.openLedgerManager = async function() {
     let msg = '管理账本：\n';
     appData.ledgers.forEach((l, i) => msg += `${i+1}. ${l.name} (预算${l.budget})\n`);
@@ -742,7 +588,7 @@
       const newBudget = parseFloat(prompt('新预算', appData.ledgers[idx].budget));
       if (!isNaN(newBudget)) {
         appData.ledgers[idx].budget = newBudget;
-        await saveLedgerToCloud(appData.ledgers[idx]);
+        await supabase.from('ledgers').upsert(appData.ledgers[idx]);
         refreshUI();
       }
     }
@@ -755,12 +601,39 @@
     a.download = `记账备份_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
   };
-  window.importDataPrompt = function() {
-    alert('导入功能需要逐条写入云端，建议直接在网页中录入。');
+  window.importDataPrompt = async function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (imported.ledgers && imported.records) {
+            if (confirm('导入将覆盖云端数据，确定吗？')) {
+              // 清空云端再导入
+              await supabase.from('records').delete().neq('id', 0); // 删除所有记录
+              await supabase.from('ledgers').delete().neq('id', 0);
+              for (let l of imported.ledgers) {
+                await supabase.from('ledgers').insert(l);
+              }
+              for (let r of imported.records) {
+                await supabase.from('records').insert(r);
+              }
+              await loadFromCloud();
+            }
+          } else alert('文件格式错误');
+        } catch(ex) { alert('解析失败'); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   };
 
-  // 初始
-  refreshUI();
+  // 初始化：加载云端数据
+  loadFromCloud();
 </script>
 </body>
 </html>
