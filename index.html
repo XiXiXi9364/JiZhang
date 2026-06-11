@@ -34,7 +34,6 @@
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* 认证页面 */
     .auth-screen {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
@@ -329,7 +328,7 @@
       alert(result.error.message);
     } else if (authMode === 'register') {
       alert('注册成功！请登录');
-      toggleAuthMode();
+      window.toggleAuthMode(); // 自动切换到登录模式
     } else {
       currentUser = result.data.user;
       document.getElementById('authScreen').style.display = 'none';
@@ -585,7 +584,7 @@
     }).join('');
   }
 
-  // ========== 统计（保持之前的绘图逻辑） ==========
+  // ========== 统计 ==========
   function getActiveRange() {
     if (currentTimeRange === 'thisWeek') return getWeekRange();
     if (currentTimeRange === 'thisMonth') return getMonthRange();
@@ -720,7 +719,7 @@
     }
   });
 
-  // 账本管理（简化版，可后续扩展）
+  // 账本管理
   window.openLedgerSwitcher = async function() {
     const name = prompt('输入新账本名称（如“旅行”）');
     if (!name) return;
